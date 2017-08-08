@@ -29,13 +29,14 @@ labels_map = {
 #}}}
 
 
-dataset_paths = glob('./CNN_datatest/*')
+dataset_paths = glob('./CNN_datatest_cropped/train/wiktor/*')
 
 image_data = []
 image_labels = []
 
 for fl in dataset_paths:
     img_read = io.imread(fl)
+    
     img_read = cv2.cvtColor(img_read, cv2.COLOR_BGR2GRAY)
     image_data.append(img_read)    
     
