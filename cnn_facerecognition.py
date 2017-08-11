@@ -14,31 +14,37 @@ from keras.layers import Flatten
 from keras.layers import Dense
 
 # Initialising the CNN
-classifier = Sequential()
 
-# Step 1 - Convolution
-classifier.add(Conv2D(32, (10, 10), input_shape = (200, 200, 1), activation = 'relu'))
+def build_classifier(nb_ann_layers=1, nb_cnn_layers=1, ann_activation='relu', cnn_activation='relu'):
+    classifier = Sequential()
+    
+    # Step 1 - Convolution
+    classifier.add(Conv2D(32, (3, 3), input_shape = (200, 200, 3), activation = 'relu'))
+    
+    # Step 2 - Pooling
+    classifier.add(MaxPooling2D(pool_size = (2, 2)))
+    
+    # Adding a second convolutional layer
+    for i in range(nb_cnn_layers):
+        classifier.add(Conv2D(32, (3, 3), activation = cnn_activation))
+        classifier.add(MaxPooling2D(pool_size = (2, 2)))
+    #
+    ## Adding a second convolutional layer
+    #classifier.add(Conv2D(98, (3, 3), activation = 'relu'))
+    #classifier.add(MaxPooling2D(pool_size = (4, 4)))
+    
+    # Step 3 - Flattening
+    classifier.add(Flatten())
+    
+    # Step 4 - Full connection
+    for i in range(nb_ann_layers):
+        classifier.add(Dense(units = 256, activation = ann_activation))
 
-# Step 2 - Pooling
-classifier.add(MaxPooling2D(pool_size = (2, 2)))
-
-# Adding a second convolutional layer
-classifier.add(Conv2D(64, (5, 5), activation = 'relu'))
-classifier.add(MaxPooling2D(pool_size = (2, 2)))
-
-# Adding a second convolutional layer
-classifier.add(Conv2D(98, (3, 3), activation = 'relu'))
-classifier.add(MaxPooling2D(pool_size = (4, 4)))
-
-# Step 3 - Flattening
-classifier.add(Flatten())
-
-# Step 4 - Full connection
-classifier.add(Dense(units = 150, activation = 'relu'))
-classifier.add(Dense(units = 1, activation = 'sigmoid'))
-
-# Compiling the CNN
-classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
+    classifier.add(Dense(units = 1, activation = 'sigmoid'))
+    
+    # Compiling the CNN
+    classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
+    return classifier
 
 # Part 2 - Fitting the CNN to the images
 
@@ -53,19 +59,51 @@ test_datagen = ImageDataGenerator(rescale = 1./255)
 
 training_set = train_datagen.flow_from_directory('CNN_datatest_cropped/train',
                                                  target_size = (200, 200),
-                                                 batch_size = 4,
-                                                 color_mode = 'grayscale',
+                                                 batch_size = 32,
+                                                 color_mode = 'rgb',
                                                  class_mode = 'binary')
 
 test_set = test_datagen.flow_from_directory('CNN_datatest_cropped/test',
                                             target_size = (200, 200),
-                                            batch_size = 4,
-                                            color_mode = 'grayscale',
+                                            batch_size = 32,
+                                            color_mode = 'rgb',
                                             class_mode = 'binary')
 
-classifier.fit_generator(training_set,
-                         steps_per_epoch = 8000,
-                         epochs = 25,
+params = {
+        'nb_ann_layers': [4, 8, 10],
+        'nb_cnn_layers': [1, 2, 4],
+        }
+params_attr = params.copy()
+
+#import itertools as it
+#combinations = it.product(*(v for _, v in params.items()))
+
+combinations = []
+for k, v in params.items():
+    params_attr.pop(k)
+    for v_item in v:
+        for second_k, second_v in params_attr.items():
+            if second_k == k:
+                continue
+            for second_v_item in second_v:
+                combinations.append({k: v_item, second_k: second_v_item})
+
+
+epochs = 100
+results = []
+for param in combinations:
+    classifier = build_classifier(**param)
+    res = classifier.fit_generator(training_set,
+                         steps_per_epoch = 10,
+                         epochs = epochs,
                          validation_data = test_set,
-                         validation_steps = 2000)
+                         validation_steps = 5)
+    results.append((classifier, param, 'acc: %f, loss: %f, val_acc: %f, val_loss: %f'
+                    %(res.history['acc'][epochs-1], res.history['loss'][epochs-1],
+                      res.history['val_acc'][epochs-1], res.history['val_loss'][epochs-1])))
+
+for res in results:
+    ann_layers = res[1]['nb_ann_layers']
+    cnn_layers = res[1]['nb_cnn_layers']
+    res[0].save('FR_model_ann_layers_%d_cnn_layers_%d-%s.hdf5' % (ann_layers, cnn_layers, res[2]))
 
