@@ -73,7 +73,7 @@ while success:
     # Display the resulting frame
     
     cv2.imshow('frame', frame)
-    cv2.imshow('face', face)
+    #cv2.imshow('face', face)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
