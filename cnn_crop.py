@@ -29,7 +29,7 @@ labels_map = {
 #}}}
 
 
-dataset_paths = glob('./new_ludo/*')
+dataset_paths = glob('./new_wiktor/*')
 
 image_data = []
 image_data_gray = []
@@ -85,7 +85,7 @@ for i, im in enumerate(image_data):
 #plt.imshow(cropped[12], cmap='gray')
 #plt.imshow(cropped[13], cmap='gray')
 
-index = 0
+index = 171
 for i, c in enumerate(cropped):
-    cv2.imwrite('./CNN_datatest_cropped/ludovic_'+str(i+index)+'.JPG', cv2.cvtColor(c, cv2.COLOR_RGB2BGR))
+    cv2.imwrite('./CNN_datatest_cropped/wiktor_'+str(i+index)+'.JPG', cv2.cvtColor(c, cv2.COLOR_RGB2BGR))
 #plt.imshow(x_clahe, cmap='gray')

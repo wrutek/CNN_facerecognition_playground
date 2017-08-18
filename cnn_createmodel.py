@@ -11,7 +11,7 @@ from keras.models import Sequential
 from keras.layers import Conv2D
 from keras.layers import MaxPooling2D
 from keras.layers import Flatten
-from keras.layers import Dense
+from keras.layers import Dense, Dropout
 
 # Initialising the CNN
 
@@ -39,11 +39,12 @@ def build_classifier(nb_ann_layers=1, nb_cnn_layers=1, ann_activation='relu', cn
     # Step 4 - Full connection
     for i in range(nb_ann_layers):
         classifier.add(Dense(units = 256, activation = ann_activation))
+        classifier.add(Dropout(0.6))
 
-    classifier.add(Dense(units = 1, activation = 'sigmoid'))
+    classifier.add(Dense(units = 2, activation = 'sigmoid'))
     
     # Compiling the CNN
-    classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
+    classifier.compile(optimizer = 'adam', loss = 'categorical_crossentropy', metrics = ['accuracy'])
     return classifier
 
 # Part 2 - Fitting the CNN to the images
@@ -61,17 +62,17 @@ training_set = train_datagen.flow_from_directory('CNN_datatest_cropped/train',
                                                  target_size = (200, 200),
                                                  batch_size = 32,
                                                  color_mode = 'rgb',
-                                                 class_mode = 'binary')
+                                                 class_mode = 'categorical')
 
 test_set = test_datagen.flow_from_directory('CNN_datatest_cropped/test',
                                             target_size = (200, 200),
                                             batch_size = 32,
                                             color_mode = 'rgb',
-                                            class_mode = 'binary')
+                                            class_mode = 'categorical')
 
 params = {
-        'nb_ann_layers': [4, 8, 10],
-        'nb_cnn_layers': [1, 2, 4],
+        'nb_ann_layers': [4],
+        'nb_cnn_layers': [4],
         }
 params_attr = params.copy()
 
@@ -89,7 +90,7 @@ for k, v in params.items():
                 combinations.append({k: v_item, second_k: second_v_item})
 
 
-epochs = 100
+epochs = 20
 results = []
 for param in combinations:
     classifier = build_classifier(**param)
@@ -97,7 +98,7 @@ for param in combinations:
                          steps_per_epoch = 10,
                          epochs = epochs,
                          validation_data = test_set,
-                         validation_steps = 5)
+                         validation_steps = 4)
     results.append((classifier, param, 'acc: %f, loss: %f, val_acc: %f, val_loss: %f'
                     %(res.history['acc'][epochs-1], res.history['loss'][epochs-1],
                       res.history['val_acc'][epochs-1], res.history['val_loss'][epochs-1])))
@@ -105,5 +106,6 @@ for param in combinations:
 for res in results:
     ann_layers = res[1]['nb_ann_layers']
     cnn_layers = res[1]['nb_cnn_layers']
-    res[0].save('FR_model_ann_layers_%d_cnn_layers_%d-%s.hdf5' % (ann_layers, cnn_layers, res[2]))
+#    res[0].save('FR_model_ann_layers_%d_cnn_layers_%d-%s.hdf5' % (ann_layers, cnn_layers, res[2]))
+    res[0].save('categorical_crossentropy.hdf5')
 

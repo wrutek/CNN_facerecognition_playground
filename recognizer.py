@@ -30,10 +30,10 @@ class FaceDetector(object):
 class FaceRecogniser(object):
     
     def __init__(self):
-        self.classifier = load_model('FR_model_ann_layers_4_cnn_layers_4-acc_1.000000_loss_0.001747_val_acc_1.000000_val_loss_0.008827.hdf5')
+        self.classifier = load_model('categorical_crossentropy.hdf5')
         self.class_mapper = {
-                0: 'Ludovic',
-                1: 'Wiktor',
+                'Ludovic': 0,
+                'Wiktor': 1,
                 }
 
     def who_am_i(self, img):
@@ -41,8 +41,15 @@ class FaceRecogniser(object):
         img = cv2.resize(img, (200, 200))
         img = image.img_to_array(img)
         img = np.expand_dims(img, axis=0)
-        res = self.classifier.predict_classes(img)
-        return self.class_mapper[res[0][0]]
+        res = self.classifier.predict(img)
+#        return self.class_mapper[res[0][0]]
+        print(res)
+        if res[0][self.class_mapper['Wiktor']] == 1.0:
+            return 'Wiktor'
+        elif res[0][self.class_mapper['Ludovic']] == 1.0:
+            return 'Ludovic'
+        else:
+            return 'Unknow'
             
 
 
