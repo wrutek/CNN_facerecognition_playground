@@ -90,15 +90,15 @@ for k, v in params.items():
                 combinations.append({k: v_item, second_k: second_v_item})
 
 
-epochs = 20
+epochs = 10
 results = []
 for param in combinations:
     classifier = build_classifier(**param)
     res = classifier.fit_generator(training_set,
-                         steps_per_epoch = 10,
+                         steps_per_epoch = 35,
                          epochs = epochs,
                          validation_data = test_set,
-                         validation_steps = 4)
+                         validation_steps = 15)
     results.append((classifier, param, 'acc: %f, loss: %f, val_acc: %f, val_loss: %f'
                     %(res.history['acc'][epochs-1], res.history['loss'][epochs-1],
                       res.history['val_acc'][epochs-1], res.history['val_loss'][epochs-1])))
